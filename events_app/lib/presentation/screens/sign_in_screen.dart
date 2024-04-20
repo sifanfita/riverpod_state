@@ -1,3 +1,5 @@
+import 'package:events_app/presentation/screens/admin_homepage_screen.dart';
+import 'package:events_app/presentation/screens/sign_up_screen.dart';
 import 'package:flutter/material.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -5,11 +7,11 @@ class SignInScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Taatee'),
+        title: const Text('Taatee'),
       ),
       backgroundColor: Colors.black,
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -21,8 +23,8 @@ class SignInScreen extends StatelessWidget {
                   width: 100.0,
                   height: 100.0,
                 ),
-                SizedBox(width: 10.0),
-                Text(
+                const SizedBox(width: 10.0),
+                const Text(
                   'Taatee',
                   style: TextStyle(
                     fontSize: 20.0,
@@ -32,14 +34,14 @@ class SignInScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
             Container(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               color: Colors.black87,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
+                  const Text(
                     'Sign in to your account',
                     style: TextStyle(
                       fontSize: 18.0,
@@ -47,66 +49,73 @@ class SignInScreen extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 10.0),
-                  Text(
+                  const SizedBox(height: 10.0),
+                  const Text(
                     'Email',
                     style: TextStyle(
                       fontSize: 16.0,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 10.0),
+                  const SizedBox(height: 10.0),
                   TextFormField(
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[800],
-                      hintStyle: TextStyle(color: Colors.white),
-                      contentPadding: EdgeInsets.symmetric(
+                      hintStyle: const TextStyle(color: Colors.white),
+                      contentPadding: const EdgeInsets.symmetric(
                           vertical: 16.0, horizontal: 16.0),
                       hintText: 'Enter your email',
                     ),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 10.0),
-                  Text(
+                  const SizedBox(height: 10.0),
+                  const Text(
                     'Password',
                     style: TextStyle(
                       fontSize: 16.0,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 10.0),
+                  const SizedBox(height: 10.0),
                   TextFormField(
                     obscureText: true,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[800],
-                      hintStyle: TextStyle(color: Colors.white),
-                      contentPadding: EdgeInsets.symmetric(
+                      hintStyle: const TextStyle(color: Colors.white),
+                      contentPadding: const EdgeInsets.symmetric(
                           vertical: 16.0, horizontal: 16.0),
                       hintText: 'Enter your password',
                     ),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 20.0),
+                  const SizedBox(height: 20.0),
                   ElevatedButton(
                     onPressed: () {
+                      Navigator.of(context).pushReplacement(MaterialPageRoute(
+                          builder: (context) => const AdminHomePage()));
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(Colors.blue),
                     ),
-                    child: Text(
-                      'Sign In',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: const Text(
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                        'Sign In'),
                   ),
-                  SizedBox(height: 20.0),
+                  const SizedBox(height: 20.0),
                   GestureDetector(
                     onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SignUpScreen(),
+                        ),
+                      );
                     },
-                    child: Text(
+                    child: const Text(
                       "Don't have an account? Sign up",
                       textAlign: TextAlign.center,
                       style: TextStyle(

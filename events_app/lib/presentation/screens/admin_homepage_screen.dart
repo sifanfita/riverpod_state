@@ -1,3 +1,4 @@
+import 'package:events_app/presentation/screens/create_event_screen.dart';
 import 'package:flutter/material.dart';
 
 class Event {
@@ -9,8 +10,9 @@ class Event {
 }
 
 class AdminHomePage extends StatefulWidget {
+  const AdminHomePage({super.key});
   @override
-  _AdminHomePageState createState() => _AdminHomePageState();
+  State<AdminHomePage> createState() => _AdminHomePageState();
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
@@ -93,7 +95,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
           backgroundColor: Colors.blue,
           onPressed: () {
             // Handle add event button pressed
-            print('Add event button pressed');
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => const CreateEventScreen()),
+            );
           },
           icon: const Icon(
             Icons.add,
@@ -130,10 +135,4 @@ class _AdminHomePageState extends State<AdminHomePage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: AdminHomePage(),
-  ));
 }
