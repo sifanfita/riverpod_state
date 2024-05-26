@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:events_app/presentation/screens/sign_in_screen.dart';
+import 'package:events_app/presentation/screens/events_screen.dart';
+import 'package:events_app/utils/auth_utils.dart'; // Ensure this import is correct
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,11 +17,21 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    _checkAuthentication();
+  }
 
-    Future.delayed(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) =>  SignInScreen()));
-    });
+  void _checkAuthentication() async {
+    // Check if user is logged in and navigate accordingly
+    bool isLoggedIn = await AuthUtils.isLoggedIn();
+    if (isLoggedIn) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) =>
+              const EventsScreen())); // Go to events screen if logged in
+    } else {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (_) =>
+              SignInScreen())); // Go to sign in screen if not logged in
+    }
   }
 
   @override

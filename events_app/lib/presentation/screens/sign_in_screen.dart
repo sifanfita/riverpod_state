@@ -1,136 +1,124 @@
-import 'package:events_app/presentation/screens/admin_homepage_screen.dart';
-import 'package:events_app/presentation/screens/sign_up_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../bloc/auth_bloc/auth_bloc.dart';
+import '../../bloc/auth_bloc/auth_event.dart';
+import '../../bloc/auth_bloc/auth_state.dart';
+import '../../utils/validation_utils.dart';
+import '../../utils/notification_utils.dart';
+import 'admin_homepage_screen.dart';
+import 'events_screen.dart';
+import 'sign_up_screen.dart';
 
 class SignInScreen extends StatelessWidget {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    // Use an existing instance of AuthBloc
+    final authBloc = BlocProvider.of<AuthBloc>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Taatee'),
+        title: const Text('Sign In'),
+        backgroundColor: Colors.deepPurple,
       ),
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 100.0,
-                  height: 100.0,
+      body: BlocListener<AuthBloc, AuthState>(
+        bloc: authBloc, // Use the provided AuthBloc
+        listener: (context, state) {
+          if (state is AuthSuccess) {
+            NotificationUtils.showSnackBar(context, 'Sign in successful.',
+                isError: false);
+            Navigator.of(context).pushReplacement(MaterialPageRoute(
+                builder: (context) =>
+                    state.role == 'admin' ? AdminHomePage() : EventsScreen()));
+          } else if (state is AuthFailure) {
+            NotificationUtils.showSnackBar(context, state.error, isError: true);
+          }
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Image.asset('assets/images/logo.png', width: 100, height: 100),
+              const SizedBox(height: 20),
+              buildTextField(emailController, 'Email', 'Enter your email'),
+              const SizedBox(height: 10),
+              buildTextField(
+                  passwordController, 'Password', 'Enter your password',
+                  isPassword: true),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => _onSignInButtonPressed(context, authBloc),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple, // Background color
+                  foregroundColor: Colors.white, // Text color
                 ),
-                const SizedBox(width: 10.0),
-                const Text(
-                  'Taatee',
+                child: const Text('Sign In'),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => SignUpScreen()),
+                  );
+                },
+                child: const Text(
+                  "Don't have an account? Sign up",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 20.0,
+                    fontSize: 16.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              color: Colors.black87,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Sign in to your account',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 10.0),
-                  const Text(
-                    'Email',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 10.0),
-                  TextFormField(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      hintStyle: const TextStyle(color: Colors.white),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 16.0),
-                      hintText: 'Enter your email',
-                    ),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 10.0),
-                  const Text(
-                    'Password',
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 10.0),
-                  TextFormField(
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      hintStyle: const TextStyle(color: Colors.white),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 16.0),
-                      hintText: 'Enter your password',
-                    ),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 20.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(MaterialPageRoute(
-                          builder: (context) => const AdminHomePage()));
-                    },
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.blue),
-                    ),
-                    child: const Text(
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                        'Sign In'),
-                  ),
-                  const SizedBox(height: 20.0),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const SignUpScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Don't have an account? Sign up",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget buildTextField(
+      TextEditingController controller, String label, String hintText,
+      {bool isPassword = false}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        labelText: label,
+        fillColor: Colors.grey[850],
+        filled: true,
+        border: OutlineInputBorder(),
+        hintText: hintText,
+      ),
+      style: const TextStyle(color: Colors.white),
+    );
+  }
+
+  void _onSignInButtonPressed(BuildContext context, AuthBloc authBloc) {
+    // Validate email
+    final emailValidation = ValidationUtils.validateEmail(emailController.text);
+    if (!emailValidation.isValid) {
+      NotificationUtils.showSnackBar(context, emailValidation.error,
+          isError: true);
+      return;
+    }
+    // Validate password
+    final passwordValidation =
+        ValidationUtils.validatePassword(passwordController.text);
+    if (!passwordValidation.isValid) {
+      NotificationUtils.showSnackBar(context, passwordValidation.error,
+          isError: true);
+      return;
+    }
+    // Dispatch sign-in event
+    authBloc.add(SignInRequested(
+      email: emailController.text,
+      password: passwordController.text,
+    ));
   }
 }

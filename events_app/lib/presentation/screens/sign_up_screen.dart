@@ -1,175 +1,133 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:events_app/presentation/screens/events_screen.dart';
 import 'package:events_app/presentation/screens/sign_in_screen.dart';
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: SignUpScreen(),
-  ));
-}
+import 'package:events_app/bloc/auth_bloc/auth_bloc.dart';
+import 'package:events_app/bloc/auth_bloc/auth_event.dart';
+import 'package:events_app/bloc/auth_bloc/auth_state.dart';
+import '../../utils/notification_utils.dart';
+import '../../utils/validation_utils.dart';
 
 class SignUpScreen extends StatelessWidget {
-  const SignUpScreen({super.key});
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  SignUpScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Use an existing instance of AuthBloc
+    final authBloc = BlocProvider.of<AuthBloc>(context, listen: false);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+        backgroundColor: Colors.deepPurple,
+      ),
       backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: Container(
+      body: BlocListener<AuthBloc, AuthState>(
+        bloc: authBloc,
+        listener: (context, state) {
+          if (state is AuthSuccess) {
+            NotificationUtils.showSnackBar(context, 'Sign up successful.',
+                isError: false);
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => EventsScreen()));
+          } else if (state is AuthFailure) {
+            NotificationUtils.showSnackBar(context, state.error, isError: true);
+          }
+        },
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(
-                height: 60,
-              ),
-              IntrinsicWidth(
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      width: 70,
-                      height: 70,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20),
-                        'Taatee'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Create A New Account',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                      'First Name')),
-              const SizedBox(
-                height: 8,
-              ),
-              TextField(
-                style: const TextStyle(color: Colors.grey),
-                decoration: InputDecoration(
-                    labelText: 'Sifan',
-                    filled: true,
-                    fillColor: Colors.blue.withOpacity(0.1),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 12)),
-              ),
-              const SizedBox(height: 16),
-              const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                      'Last Name')),
-              const SizedBox(
-                height: 8,
-              ),
-              TextField(
-                style: const TextStyle(color: Colors.grey),
-                decoration: InputDecoration(
-                    labelText: 'Fita',
-                    filled: true,
-                    fillColor: Colors.blue.withOpacity(0.1),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 12)),
-              ),
-              const SizedBox(height: 16),
-              const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                      'Your Email')),
-              const SizedBox(
-                height: 8,
-              ),
-              TextField(
-                style: const TextStyle(color: Colors.grey),
-                decoration: InputDecoration(
-                    labelText: 'sifanfita@gmail.com',
-                    filled: true,
-                    fillColor: Colors.blue.withOpacity(0.1),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 12)),
-              ),
-              const SizedBox(height: 16),
-              const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                      'Password')),
-              const SizedBox(
-                height: 8,
-              ),
-              TextField(
-                style: const TextStyle(
-                    color: Colors.grey, fontWeight: FontWeight.bold),
-                obscureText: true,
-                decoration: InputDecoration(
-                    labelText: '........',
-                    labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 24),
-                    filled: true,
-                    fillColor: Colors.blue.withOpacity(0.1),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 12)),
-              ),
-              const SizedBox(height: 32),
+              Image.asset('assets/images/logo.png', width: 100, height: 100),
+              const SizedBox(height: 20),
+              buildTextField(
+                  firstNameController, 'First Name', 'Enter your first name'),
+              const SizedBox(height: 10),
+              buildTextField(
+                  lastNameController, 'Last Name', 'Enter your last name'),
+              const SizedBox(height: 10),
+              buildTextField(emailController, 'Email', 'Enter your email'),
+              const SizedBox(height: 10),
+              buildTextField(
+                  passwordController, 'Password', 'Enter your password',
+                  isPassword: true),
+              const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => EventsScreen()));
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.blue),
+                onPressed: () => _onSignUpButtonPressed(context, authBloc),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple, // Background color
+                  foregroundColor: Colors.white, // Text color
                 ),
-                child: const Text(
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                    'Sign Up'),
+                child: const Text('Sign Up'),
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (_) => SignInScreen()));
                 },
                 child: const Text(
-                    style: TextStyle(color: Colors.grey),
-                    'Already have an account? Sign In'),
+                  "Already have an account? Sign In",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget buildTextField(
+      TextEditingController controller, String label, String hintText,
+      {bool isPassword = false}) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        labelText: label,
+        fillColor: Colors.grey[850],
+        filled: true,
+        border: OutlineInputBorder(),
+        hintText: hintText,
+      ),
+      style: const TextStyle(color: Colors.white),
+    );
+  }
+
+  void _onSignUpButtonPressed(BuildContext context, AuthBloc authBloc) {
+    final firstNameValid =
+        ValidationUtils.validateName(firstNameController.text);
+    final lastNameValid = ValidationUtils.validateName(lastNameController.text);
+    final emailValid = ValidationUtils.validateEmail(emailController.text);
+    final passwordValid =
+        ValidationUtils.validatePassword(passwordController.text);
+
+    if (!firstNameValid.isValid ||
+        !lastNameValid.isValid ||
+        !emailValid.isValid ||
+        !passwordValid.isValid) {
+      NotificationUtils.showSnackBar(context, 'Please check your inputs.',
+          isError: true);
+      return;
+    }
+
+    authBloc.add(SignUpRequested(
+      firstName: firstNameController.text,
+      lastName: lastNameController.text,
+      email: emailController.text,
+      password: passwordController.text,
+    ));
   }
 }
