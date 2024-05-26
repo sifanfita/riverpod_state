@@ -5,13 +5,11 @@ class Booking {
   int id;
   DateTime bookingDate;
   Event event;
-  User user;
 
   Booking({
     required this.id,
     required this.bookingDate,
     required this.event,
-    required this.user,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -19,7 +17,6 @@ class Booking {
       id: json['id'] as int,
       bookingDate: DateTime.parse(json['bookingDate']),
       event: Event.fromJson(json['event']),
-      user: User.fromJson(json['user']),
     );
   }
 
@@ -28,7 +25,6 @@ class Booking {
       'id': id,
       'bookingDate': bookingDate.toIso8601String(),
       'event': event.toJson(),
-      'user': user.toJson(),
     };
   }
 }
