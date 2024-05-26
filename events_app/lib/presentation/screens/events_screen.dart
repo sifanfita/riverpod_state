@@ -1,42 +1,53 @@
 import 'package:flutter/material.dart';
-
-class Event {
-  final String title;
-  final String date;
-  final String location;
-
-  Event({
-    required this.title,
-    required this.date,
-    required this.location,
-  });
-}
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../bloc/event_bloc/event_bloc.dart';
+import '../../bloc/event_bloc/event_event.dart';
+import '../../bloc/event_bloc/event_state.dart';
+import '../widgets/event_card.dart';
+import '../screens/my_account_screen.dart';
+import '../screens/my_bookings_screen.dart';
 
 class EventsScreen extends StatefulWidget {
+  const EventsScreen({super.key});
+
   @override
   _EventsScreenState createState() => _EventsScreenState();
 }
 
 class _EventsScreenState extends State<EventsScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Default index for the first tab
 
-  final List<Event> events = [
-    Event(
-      title: 'AAU tech fest',
-      date: 'May 15, 2024',
-      location: 'AAiT',
-    ),
-    Event(
-      title: 'Art Exhibition',
-      date: 'June 20, 2024',
-      location: 'Art Gallery',
-    ),
-    Event(
-      title: 'Food Festival',
-      date: 'July 10, 2024',
-      location: 'Central Park',
-    ),
-  ];
+  // Dynamic switching of screens
+  Widget _currentScreen() {
+    switch (_selectedIndex) {
+      case 0: // Events
+        return BlocProvider(
+          create: (_) => EventBloc()..add(LoadEvents()),
+          child: BlocBuilder<EventBloc, EventState>(
+            builder: (context, state) {
+              if (state is EventLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is EventsLoaded) {
+                return ListView.builder(
+                  itemCount: state.events.length,
+                  itemBuilder: (context, index) {
+                    return EventCard(event: state.events[index]);
+                  },
+                );
+              } else {
+                return const Center(child: Text('Failed to load events'));
+              }
+            },
+          ),
+        );
+      case 1: // My Account
+        return MyAccountScreen();
+      case 2: // My Bookings
+        return MyBookingsScreen();
+      default:
+        return const Center(child: Text('Page not found'));
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -47,104 +58,26 @@ class _EventsScreenState extends State<EventsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text(
-            'Upcoming Events',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-      backgroundColor: Colors.black,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Explore Events!',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                return EventCard(event: events[index]);
-              },
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Upcoming Events')),
+      body: _currentScreen(), // Update the body to display the current screen
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.event),
-            label: 'My Events',
+            icon: Icon(Icons.account_circle),
+            label: 'My Account',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book_online),
+            label: 'My Bookings',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.black,
+        selectedItemColor: Colors.deepPurple,
         onTap: _onItemTapped,
-      ),
-    );
-  }
-}
-
-class EventCard extends StatelessWidget {
-  final Event event;
-
-  EventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      color: Colors.grey[900],
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              event.title,
-              style: const TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              'Date: ${event.date}',
-              style: const TextStyle(fontSize: 16.0, color: Colors.white),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              'Location: ${event.location}',
-              style: const TextStyle(fontSize: 16.0, color: Colors.white),
-            ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                // Add book event logic here
-              },
-              child: const Text('Book Event'),
-            ),
-          ],
-        ),
       ),
     );
   }
