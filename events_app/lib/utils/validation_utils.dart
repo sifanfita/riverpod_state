@@ -12,7 +12,7 @@ class ValidationUtils {
 
   static ValidationResult validatePassword(String password) {
     return ValidationResult(
-      isValid: password.length > 6,
+      isValid: password.length >= 6,
       error: 'Password must be at least 6 characters',
     );
   }
