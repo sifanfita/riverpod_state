@@ -2,24 +2,35 @@ import 'package:dio/dio.dart';
 import 'package:events_app/config/app_config.dart'; // Import the AppConfig class
 
 class ApiUtils {
-  static final Dio dio = Dio();
+  static final Dio dio = Dio()
+    ..options = BaseOptions(
+        baseUrl: AppConfig.baseUrl,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        validateStatus: (status) {
+          return status! <
+              500; // Treat all status codes below 500 as successful
+        });
+
+  static Options _getDioOptions(String? accessToken) {
+    return Options(
+      headers: {
+        if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+      },
+    );
+  }
 
   static Future<Map<String, dynamic>> get(String endpoint,
       {String? accessToken}) async {
     try {
       final response = await dio.get(
-        AppConfig.baseUrl + endpoint, // Use AppConfig.baseUrl
-        options: Options(headers: {
-          'Authorization': 'Bearer $accessToken',
-        }),
+        endpoint,
+        options: _getDioOptions(accessToken),
       );
-      return {'success': true, 'data': response.data};
+      return _handleResponse(response);
     } catch (e) {
-      print('Error fetching data from API: $e');
-      return {
-        'success': false,
-        'error': {'message': 'An error occurred while fetching data.'}
-      };
+      return _handleError(e);
     }
   }
 
@@ -27,23 +38,12 @@ class ApiUtils {
       {String? accessToken}) async {
     try {
       final response = await dio.delete(
-        AppConfig.baseUrl + endpoint, // Use AppConfig.baseUrl
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        }),
+        endpoint,
+        options: _getDioOptions(accessToken),
       );
-      if (response.statusCode == 200) {
-        return {'success': true};
-      } else {
-        return {'success': false, 'error': response.data};
-      }
+      return _handleResponse(response);
     } catch (e) {
-      print('Error deleting data from API: $e');
-      return {
-        'success': false,
-        'error': {'message': 'An error occurred while deleting data.'}
-      };
+      return _handleError(e);
     }
   }
 
@@ -51,27 +51,13 @@ class ApiUtils {
       {Map<String, dynamic>? body, String? accessToken}) async {
     try {
       final response = await dio.post(
-        AppConfig.baseUrl + endpoint, // Use AppConfig.baseUrl
+        endpoint,
         data: body,
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        }),
+        options: _getDioOptions(accessToken),
       );
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': response.data};
-      } else {
-        return {'success': false, 'error': response.data};
-      }
+      return _handleResponse(response);
     } catch (e) {
-      print('Error posting data to API: $e');
-      return {
-        'success': false,
-        'error': {
-          'message':
-              'An error occurred while connecting to the API: ${e.toString()}'
-        }
-      };
+      return _handleError(e);
     }
   }
 
@@ -80,23 +66,33 @@ class ApiUtils {
       {String? accessToken}) async {
     try {
       final response = await dio.patch(
-        AppConfig.baseUrl + endpoint, // Use AppConfig.baseUrl
+        endpoint,
         data: body,
-        options: Options(headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        }),
+        options: _getDioOptions(accessToken),
       );
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': response.data};
-      } else {
-        return {'success': false, 'error': response.data};
-      }
+      return _handleResponse(response);
     } catch (e) {
-      print('Error patching data to API: $e');
+      return _handleError(e);
+    }
+  }
+
+  static Map<String, dynamic> _handleResponse(Response response) {
+    return response.statusCode! >= 200 && response.statusCode! < 300
+        ? {'success': true, 'data': response.data}
+        : {'success': false, 'data': response.data};
+  }
+
+  static Map<String, dynamic> _handleError(dynamic e) {
+    if (e is DioException) {
       return {
         'success': false,
-        'error': {'message': 'An error occurred while updating.'}
+        'data': e.response?.data['message'] ?? e.message,
+        'statusCode': e.response?.statusCode
+      };
+    } else {
+      return {
+        'success': false,
+        'data': 'An unexpected error occurred: ${e.toString()}'
       };
     }
   }

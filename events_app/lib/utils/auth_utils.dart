@@ -8,6 +8,7 @@ class AuthUtils {
     if (token != null && token.isNotEmpty) {
       try {
         var res = await AuthApi.validateToken(token);
+        print('Token validation response: $res');
         if (res['success'] == true && res['data']['valid'] == true) {
           return true;
         }
@@ -26,5 +27,11 @@ class AuthUtils {
     } else {
       await prefs.setString('token', token); // Set the token
     }
+  }
+
+  // Get the authentication token from SharedPreferences.
+  static Future<String?> getToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
   }
 }
