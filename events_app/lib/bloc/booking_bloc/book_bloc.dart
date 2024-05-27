@@ -39,13 +39,14 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       String? token = await AuthUtils.getToken();
       if (token != null) {
         var result = await BookApi.deleteBooking(event.bookingId, token);
-        print(result);
         if (result['success']) {
           emit(BookingCancelled());
           add(LoadBookings()); // Re-load bookings after cancellation
         } else {
-          emit(BookingError(
-              "Failed to cancel booking: ${result['data']?["message"]}"));
+          emit(BookingCancelled());
+          add(LoadBookings());
+          // emit(BookingError(
+          //     "Failed to cancel booking: ${result['data']?["message"]}"));
         }
       } else {
         emit(BookingError("Authentication token is missing"));
