@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/user_bloc/user_bloc.dart';
+import '../../bloc/user_bloc/user_state.dart';
+import '../../bloc/user_bloc/user_event.dart';
 import 'package:events_app/presentation/screens/sign_in_screen.dart';
 import 'package:events_app/utils/auth_utils.dart';
 
@@ -82,7 +84,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    context.read<UserBloc>().add(DeleteUser());
+                    context.read<UserBloc>().add(DeleteSelf());
                   },
                   child: Text("Delete Account"),
                   style: ElevatedButton.styleFrom(
