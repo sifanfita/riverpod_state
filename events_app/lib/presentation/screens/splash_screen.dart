@@ -1,3 +1,4 @@
+import 'package:events_app/presentation/screens/admin_homepage_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:events_app/presentation/screens/sign_in_screen.dart';
@@ -24,9 +25,15 @@ class _SplashScreenState extends State<SplashScreen>
     // Check if user is logged in and navigate accordingly
     bool isLoggedIn = await AuthUtils.isLoggedIn();
     if (isLoggedIn) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (_) =>
-              const EventsScreen())); // Go to events screen if logged in
+      if (await AuthUtils.getUserRole(AuthUtils.getToken()) == 'admin') {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (_) =>
+                const AdminHomePage())); // Go to events screen if logged in
+      } else {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (_) =>
+                const EventsScreen())); // Go to events screen if logged in
+      }
     } else {
       Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (_) =>

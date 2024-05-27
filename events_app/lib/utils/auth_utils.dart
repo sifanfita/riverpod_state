@@ -1,3 +1,4 @@
+import 'package:events_app/api/user_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/auth_api.dart';
 
@@ -33,5 +34,15 @@ class AuthUtils {
   static Future<String?> getToken() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
+  }
+
+  // get user role
+  static Future<String?> getUserRole(token) async {
+    // get token, validate token, get user role
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    // getSelf UserApi
+    var res = await UserApi.getSelf(token ?? "");
+    return res['data']['role'] ?? 'user';
   }
 }

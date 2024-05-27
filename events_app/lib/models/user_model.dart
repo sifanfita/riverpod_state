@@ -27,7 +27,7 @@ class User {
           ? List<Booking>.from(
               json['bookings'].map((model) => Booking.fromJson(model)))
           : null,
-      role: json['role'] != null ? "admin" : "user",
+      role: json['role'] ?? "user",
     );
   }
 
