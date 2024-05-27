@@ -5,6 +5,11 @@ abstract class EventEvent {}
 
 class LoadEvents extends EventEvent {}
 
+class CreateEvent extends EventEvent {
+  final Event event;
+  CreateEvent(this.event);
+}
+
 class UpdateEvent extends EventEvent {
   final Event event;
   UpdateEvent(this.event);

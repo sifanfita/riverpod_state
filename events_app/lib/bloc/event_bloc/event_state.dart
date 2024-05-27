@@ -14,3 +14,5 @@ class EventError extends EventState {
   final String message; // Include error message
   EventError(this.message);
 }
+
+class Reload extends EventState {}
