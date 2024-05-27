@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/user_bloc/user_bloc.dart';
 import '../../bloc/user_bloc/user_state.dart';
 
+import 'package:go_router/go_router.dart';
+
 class UserManagementScreen extends StatefulWidget {
   @override
   _UserManagementScreenState createState() => _UserManagementScreenState();
@@ -91,13 +93,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text("Cancel"),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              // onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () => context.pop(),
             ),
             TextButton(
               child: const Text("Delete", style: TextStyle(color: Colors.red)),
               onPressed: () {
                 context.read<UserBloc>().add(DeleteUser(userId));
-                Navigator.of(dialogContext).pop();
+                // Navigator.of(dialogContext).pop();
+                context.pop();
               },
             ),
           ],
