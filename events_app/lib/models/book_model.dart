@@ -1,4 +1,3 @@
-import 'user_model.dart';
 import 'event_model.dart';
 
 class Booking {
