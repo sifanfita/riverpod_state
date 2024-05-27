@@ -9,9 +9,19 @@ import 'admin_homepage_screen.dart';
 import 'events_screen.dart';
 import 'sign_up_screen.dart';
 
+import 'package:go_router/go_router.dart';
+
 class SignInScreen extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  void navigateBasedOnRole(BuildContext context, String role) {
+    if (role == 'admin') {
+      context.go('/admin');
+    } else {
+      context.go('/events');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +40,10 @@ class SignInScreen extends StatelessWidget {
           if (state is AuthSuccess) {
             NotificationUtils.showSnackBar(context, 'Sign in successful.',
                 isError: false);
-            Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) =>
-                    state.role == 'admin' ? AdminHomePage() : EventsScreen()));
+            // Navigator.of(context).pushReplacement(MaterialPageRoute(
+            //     builder: (context) =>
+            //         state.role == 'admin' ? AdminHomePage() : EventsScreen()));
+            navigateBasedOnRole(context, state.role);
           } else if (state is AuthFailure) {
             NotificationUtils.showSnackBar(context, state.error, isError: true);
           }
@@ -61,9 +72,10 @@ class SignInScreen extends StatelessWidget {
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => SignUpScreen()),
-                  );
+                  // Navigator.of(context).push(
+                  //   MaterialPageRoute(builder: (context) => SignUpScreen()),
+                  // );
+                  context.go('/signup');
                 },
                 child: const Text(
                   "Don't have an account? Sign up",

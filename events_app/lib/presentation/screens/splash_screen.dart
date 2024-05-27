@@ -5,6 +5,8 @@ import 'package:events_app/presentation/screens/sign_in_screen.dart';
 import 'package:events_app/presentation/screens/events_screen.dart';
 import 'package:events_app/utils/auth_utils.dart'; // Ensure this import is correct
 
+import 'package:go_router/go_router.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -26,18 +28,21 @@ class _SplashScreenState extends State<SplashScreen>
     bool isLoggedIn = await AuthUtils.isLoggedIn();
     if (isLoggedIn) {
       if (await AuthUtils.getUserRole(AuthUtils.getToken()) == 'admin') {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (_) =>
-                const AdminHomePage())); // Go to events screen if logged in
+        // Navigator.of(context).pushReplacement(MaterialPageRoute(
+        //     builder: (_) =>
+        //         const AdminHomePage())); // Go to events screen if logged in
+        context.go('/admin');
       } else {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-            builder: (_) =>
-                const EventsScreen())); // Go to events screen if logged in
+        // Navigator.of(context).pushReplacement(MaterialPageRoute(
+        //     builder: (_) =>
+        //         const EventsScreen())); // Go to events screen if logged in
+        context.go('/events');
       }
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (_) =>
-              SignInScreen())); // Go to sign in screen if not logged in
+      // Navigator.of(context).pushReplacement(MaterialPageRoute(
+      //     builder: (_) =>
+      //         SignInScreen())); // Go to sign in screen if not logged in
+      context.go('/signin');
     }
   }
 

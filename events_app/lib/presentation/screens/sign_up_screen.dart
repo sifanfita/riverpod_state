@@ -8,6 +8,8 @@ import 'package:events_app/bloc/auth_bloc/auth_state.dart';
 import '../../utils/notification_utils.dart';
 import '../../utils/validation_utils.dart';
 
+import 'package:go_router/go_router.dart';
+
 class SignUpScreen extends StatelessWidget {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
@@ -33,8 +35,9 @@ class SignUpScreen extends StatelessWidget {
           if (state is AuthSuccess) {
             NotificationUtils.showSnackBar(context, 'Sign up successful.',
                 isError: false);
-            Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => EventsScreen()));
+            // Navigator.of(context).pushReplacement(
+            //     MaterialPageRoute(builder: (_) => EventsScreen()));
+            context.go('/events');
           } else if (state is AuthFailure) {
             NotificationUtils.showSnackBar(context, state.error, isError: true);
           }
@@ -69,8 +72,9 @@ class SignUpScreen extends StatelessWidget {
               const SizedBox(height: 20),
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => SignInScreen()));
+                  // Navigator.of(context).pushReplacement(
+                  //     MaterialPageRoute(builder: (_) => SignInScreen()));
+                  context.go('/signup');
                 },
                 child: const Text(
                   "Already have an account? Sign In",

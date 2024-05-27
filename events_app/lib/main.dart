@@ -6,6 +6,8 @@ import 'bloc/booking_bloc/book_bloc.dart';
 import 'bloc/event_bloc/event_bloc.dart';
 import 'bloc/user_bloc/user_bloc.dart';
 
+import 'routes.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -22,12 +24,12 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => BookingBloc()),
         BlocProvider(create: (_) => UserBloc()),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: ThemeData(
           brightness: Brightness.dark,
           primarySwatch: Colors.blue,
         ),
-        home: const SplashScreen(),
+        routerConfig: router,
         debugShowCheckedModeBanner: false,
       ),
     );

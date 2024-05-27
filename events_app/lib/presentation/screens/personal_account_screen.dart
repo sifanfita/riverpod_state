@@ -10,6 +10,8 @@ import '../../utils/validation_utils.dart';
 import '../../models/validation_model.dart';
 import 'sign_in_screen.dart';
 
+import 'package:go_router/go_router.dart';
+
 class PersonalAccountScreen extends StatefulWidget {
   @override
   _PersonalAccountScreenState createState() => _PersonalAccountScreenState();
@@ -181,7 +183,8 @@ class _PersonalAccountScreenState extends State<PersonalAccountScreen> {
 
   void _logout(BuildContext context) async {
     await AuthUtils.setToken(null); // Clear token
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => SignInScreen()));
+    // Navigator.of(context).pushReplacement(
+    //     MaterialPageRoute(builder: (context) => SignInScreen()));
+    context.go('/signin');
   }
 }
