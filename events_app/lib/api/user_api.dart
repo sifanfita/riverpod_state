@@ -55,4 +55,16 @@ class UserApi {
   static Future<Map<String, dynamic>> getUsers(String accessToken) async {
     return await ApiUtils.get('user/all', accessToken: accessToken);
   }
+
+  // promote
+  static Future<Map<String, dynamic>> promoteUser(
+      int id, String accessToken) async {
+    return await ApiUtils.post('user/$id/promote', accessToken: accessToken);
+  }
+
+  // demote
+  static Future<Map<String, dynamic>> demoteUser(
+      int id, String accessToken) async {
+    return await ApiUtils.post('user/$id/demote', accessToken: accessToken);
+  }
 }
