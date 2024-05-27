@@ -38,8 +38,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         setState(() {
           isBooked =
               bookings.any((booking) => booking.event.id == widget.event.id);
-          bookingId = (bookings
-              .firstWhere((booking) => booking.event.id == widget.event.id)).id;
+          if (isBooked!) {
+            bookingId = (bookings.firstWhere(
+                (booking) => booking.event.id == widget.event.id)).id;
+          }
         });
       }
     }

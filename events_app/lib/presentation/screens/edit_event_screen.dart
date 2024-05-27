@@ -4,36 +4,60 @@ import '../../bloc/event_bloc/event_bloc.dart';
 import '../../bloc/event_bloc/event_event.dart';
 import '../../models/event_model.dart';
 import '../../utils/notification_utils.dart';
+import 'events_management_screen.dart';
 
-class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+class EditEventScreen extends StatefulWidget {
+  final Event event;
+
+  const EditEventScreen({Key? key, required this.event}) : super(key: key);
+
   @override
-  State<CreateEventScreen> createState() => _CreateEventScreenState();
+  _EditEventScreenState createState() => _EditEventScreenState();
 }
 
-class _CreateEventScreenState extends State<CreateEventScreen> {
+class _EditEventScreenState extends State<EditEventScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _eventNameController = TextEditingController();
-  final TextEditingController _eventDateController = TextEditingController();
-  final TextEditingController _maxBookingController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  late TextEditingController _eventNameController;
+  late TextEditingController _eventDateController;
+  late TextEditingController _maxBookingController;
+  late TextEditingController _locationController;
+  late TextEditingController _descriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventNameController = TextEditingController(text: widget.event.eventName);
+    _eventDateController =
+        TextEditingController(text: widget.event.eventDate.toString());
+    _maxBookingController =
+        TextEditingController(text: widget.event.maxBooking.toString());
+    _locationController = TextEditingController(text: widget.event.location);
+    _descriptionController =
+        TextEditingController(text: widget.event.description);
+  }
+
+  @override
+  void dispose() {
+    _eventNameController.dispose();
+    _eventDateController.dispose();
+    _maxBookingController.dispose();
+    _locationController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Event'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Add a New Event',
-                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20.0),
+            children: <Widget>[
               TextFormField(
                 controller: _eventNameController,
                 decoration: const InputDecoration(labelText: 'Event Name'),
@@ -46,15 +70,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               ),
               TextFormField(
                 controller: _eventDateController,
-                decoration: const InputDecoration(
-                  labelText: 'Event Date',
-                  hintText: 'YYYY-MM-DD',
-                ),
+                decoration: const InputDecoration(labelText: 'Event Date'),
                 validator: (value) {
-                  if (value == null ||
-                      value.isEmpty ||
-                      DateTime.tryParse(value) == null) {
-                    return 'Please enter a valid date in YYYY-MM-DD format';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a valid date';
                   }
                   return null;
                 },
@@ -95,7 +114,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: _submitForm,
-                child: const Text('Add Event'),
+                child: const Text('Update Event'),
               ),
             ],
           ),
@@ -106,23 +125,28 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      DateTime? parsedDate = DateTime.tryParse(_eventDateController.text);
-      if (parsedDate == null) {
+      DateTime? parsedDate;
+      try {
+        parsedDate = DateTime.parse(_eventDateController.text);
+      } catch (e) {
+        // Handle the error if the date format is incorrect
         NotificationUtils.showSnackBar(
             context, 'Invalid date format. Please use YYYY-MM-DD format.',
             isError: true);
-        return;
+        return; // Stop the submission if the date is not valid
       }
-      BlocProvider.of<EventBloc>(context).add(CreateEvent(Event(
-        id: 0, // id is ignored in creation, set by the backend or database
-        eventName: _eventNameController.text,
-        eventDate: parsedDate,
-        maxBooking: int.parse(_maxBookingController.text),
-        location: _locationController.text,
-        description: _descriptionController.text,
-      )));
-      Navigator.of(context).pop(); // Close the dialog
-      NotificationUtils.showSnackBar(context, 'Event added successfully!',
+
+      // Using EventBloc to submit the updated data
+      BlocProvider.of<EventBloc>(context).add(UpdateEvent(Event(
+          id: widget.event.id,
+          eventName: _eventNameController.text,
+          eventDate: parsedDate,
+          location: _locationController.text,
+          description: _descriptionController.text,
+          maxBooking: int.parse(_maxBookingController.text))));
+      Navigator.of(context).pop();
+      // Close the modal on success
+      NotificationUtils.showSnackBar(context, 'Event updated successfully!',
           isError: false);
     }
   }

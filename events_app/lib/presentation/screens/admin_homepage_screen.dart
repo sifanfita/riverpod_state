@@ -1,137 +1,85 @@
-import 'package:events_app/presentation/screens/create_event_screen.dart';
 import 'package:flutter/material.dart';
-
-class Event {
-  String name;
-  String location;
-  String date;
-
-  Event(this.name, this.location, this.date);
-}
+import 'events_management_screen.dart';
+import 'users_management_screen.dart';
+import 'personal_account_screen.dart';
 
 class AdminHomePage extends StatefulWidget {
-  const AdminHomePage({super.key});
+  const AdminHomePage({Key? key}) : super(key: key);
+
   @override
-  State<AdminHomePage> createState() => _AdminHomePageState();
+  _AdminHomePageState createState() => _AdminHomePageState();
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  final List<Event> events = [
-    Event('January Tech Fest', 'Location: AAIT', 'Date: Jan 21, 2024'),
-    Event('Girls can code', 'Location: AASTU', 'Date: March 23, 2024'),
-    Event('Tech Networks', 'Location: Alx Hub', 'Date: June 21, 2024'),
-  ];
+  int _selectedIndex = 0;
+
+  // Page Controller for handling tab views
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _pageController.animateToPage(
+        index,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black87,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        title: Text('Admin Dashboard'),
+        backgroundColor: Colors.deepPurple,
         centerTitle: true,
-        title: const Text(
-          'Upcoming Events',
-          style: TextStyle(color: Colors.white),
-        ),
       ),
-      body: Column(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return Container(
-                  width: double.infinity,
-                  height: 120,
-                  padding: const EdgeInsets.all(8.0),
-                  child: Card(
-                    color: Colors.white.withOpacity(0.6),
-                    child: ListTile(
-                      title: Text(
-                        event.name,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(event.location),
-                          Text(event.date),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              // Handle edit button pressed
-                              print(
-                                  'Edit button pressed for event at index $index');
-                            },
-                            child: const Text('Edit'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                // Handle delete button pressed
-                                events.removeAt(index);
-                              });
-                            },
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+          EventsManagementScreen(),
+          UserManagementScreen(),
+          PersonalAccountScreen(),
         ],
-      ),
-      floatingActionButton: Align(
-        alignment: Alignment.bottomCenter,
-        child: FloatingActionButton.extended(
-          backgroundColor: Colors.blue,
-          onPressed: () {
-            // Handle add event button pressed
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (context) => const CreateEventScreen()),
-            );
-          },
-          icon: const Icon(
-            Icons.add,
-            color: Colors.white,
-          ),
-          label: const Text(
-            'Add Event',
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
-        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        items: const [
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home,
-              color: Colors.white,
-            ),
-            label: 'Home',
+            icon: Icon(Icons.event_note),
+            label: 'Events',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
+            icon: Icon(Icons.supervised_user_circle),
             label: 'Users',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Account',
+          ),
         ],
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.white70,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.black45,
       ),
     );
   }
