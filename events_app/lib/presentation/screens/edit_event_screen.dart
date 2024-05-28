@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/event_bloc/event_bloc.dart';
-import '../../bloc/event_bloc/event_event.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/event_provider.dart';
 import '../../models/event_model.dart';
 import '../../utils/notification_utils.dart';
-import 'events_management_screen.dart';
 
-class EditEventScreen extends StatefulWidget {
+class EditEventScreen extends ConsumerStatefulWidget {
   final Event event;
 
   const EditEventScreen({Key? key, required this.event}) : super(key: key);
@@ -15,7 +13,7 @@ class EditEventScreen extends StatefulWidget {
   _EditEventScreenState createState() => _EditEventScreenState();
 }
 
-class _EditEventScreenState extends State<EditEventScreen> {
+class _EditEventScreenState extends ConsumerState<EditEventScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _eventNameController;
   late TextEditingController _eventDateController;
@@ -136,14 +134,14 @@ class _EditEventScreenState extends State<EditEventScreen> {
         return; // Stop the submission if the date is not valid
       }
 
-      // Using EventBloc to submit the updated data
-      BlocProvider.of<EventBloc>(context).add(UpdateEvent(Event(
-          id: widget.event.id,
-          eventName: _eventNameController.text,
-          eventDate: parsedDate,
-          location: _locationController.text,
-          description: _descriptionController.text,
-          maxBooking: int.parse(_maxBookingController.text))));
+      ref.read(eventProvider.notifier).updateEvent(Event(
+            id: widget.event.id,
+            eventName: _eventNameController.text,
+            eventDate: parsedDate,
+            location: _locationController.text,
+            description: _descriptionController.text,
+            maxBooking: int.parse(_maxBookingController.text),
+          ));
       Navigator.of(context).pop();
       // Close the modal on success
       NotificationUtils.showSnackBar(context, 'Event updated successfully!',

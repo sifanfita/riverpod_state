@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/event_bloc/event_bloc.dart';
-import '../../bloc/event_bloc/event_event.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/event_provider.dart';
 import '../../models/event_model.dart';
 import '../../utils/notification_utils.dart';
 
-class CreateEventScreen extends StatefulWidget {
+class CreateEventScreen extends ConsumerStatefulWidget {
   const CreateEventScreen({super.key});
+
   @override
-  State<CreateEventScreen> createState() => _CreateEventScreenState();
+  _CreateEventScreenState createState() => _CreateEventScreenState();
 }
 
-class _CreateEventScreenState extends State<CreateEventScreen> {
+class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _eventNameController = TextEditingController();
   final TextEditingController _eventDateController = TextEditingController();
@@ -113,14 +113,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             isError: true);
         return;
       }
-      BlocProvider.of<EventBloc>(context).add(CreateEvent(Event(
-        id: 0, // id is ignored in creation, set by the backend or database
-        eventName: _eventNameController.text,
-        eventDate: parsedDate,
-        maxBooking: int.parse(_maxBookingController.text),
-        location: _locationController.text,
-        description: _descriptionController.text,
-      )));
+      ref.read(eventProvider.notifier).createEvent(Event(
+            id: 0, // id is ignored in creation, set by the backend or database
+            eventName: _eventNameController.text,
+            eventDate: parsedDate,
+            maxBooking: int.parse(_maxBookingController.text),
+            location: _locationController.text,
+            description: _descriptionController.text,
+          ));
       Navigator.of(context).pop(); // Close the dialog
       NotificationUtils.showSnackBar(context, 'Event added successfully!',
           isError: false);
