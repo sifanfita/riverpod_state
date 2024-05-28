@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:events_app/presentation/screens/events_screen.dart';
-import 'package:events_app/presentation/screens/sign_in_screen.dart';
-import 'package:events_app/bloc/auth_bloc/auth_bloc.dart';
-import 'package:events_app/bloc/auth_bloc/auth_event.dart';
-import 'package:events_app/bloc/auth_bloc/auth_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/notification_utils.dart';
 import '../../utils/validation_utils.dart';
-
 import 'package:go_router/go_router.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends ConsumerWidget {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final emailController = TextEditingController();
@@ -19,9 +14,18 @@ class SignUpScreen extends StatelessWidget {
   SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // Use an existing instance of AuthBloc
-    final authBloc = BlocProvider.of<AuthBloc>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next is AuthSuccess) {
+        NotificationUtils.showSnackBar(context, 'Sign up successful.',
+            isError: false);
+        context.go('/events');
+      } else if (next is AuthFailure) {
+        NotificationUtils.showSnackBar(context, next.error, isError: true);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -29,65 +33,50 @@ class SignUpScreen extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
       ),
       backgroundColor: Colors.black,
-      body: BlocListener<AuthBloc, AuthState>(
-        bloc: authBloc,
-        listener: (context, state) {
-          if (state is AuthSuccess) {
-            NotificationUtils.showSnackBar(context, 'Sign up successful.',
-                isError: false);
-            // Navigator.of(context).pushReplacement(
-            //     MaterialPageRoute(builder: (_) => EventsScreen()));
-            context.go('/events');
-          } else if (state is AuthFailure) {
-            NotificationUtils.showSnackBar(context, state.error, isError: true);
-          }
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.asset('assets/images/logo.png', width: 100, height: 100),
-              const SizedBox(height: 20),
-              buildTextField(
-                  firstNameController, 'First Name', 'Enter your first name'),
-              const SizedBox(height: 10),
-              buildTextField(
-                  lastNameController, 'Last Name', 'Enter your last name'),
-              const SizedBox(height: 10),
-              buildTextField(emailController, 'Email', 'Enter your email'),
-              const SizedBox(height: 10),
-              buildTextField(
-                  passwordController, 'Password', 'Enter your password',
-                  isPassword: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _onSignUpButtonPressed(context, authBloc),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple, // Background color
-                  foregroundColor: Colors.white, // Text color
-                ),
-                child: const Text('Sign Up'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Image.asset('assets/images/logo.png', width: 100, height: 100),
+            const SizedBox(height: 20),
+            buildTextField(
+                firstNameController, 'First Name', 'Enter your first name'),
+            const SizedBox(height: 10),
+            buildTextField(
+                lastNameController, 'Last Name', 'Enter your last name'),
+            const SizedBox(height: 10),
+            buildTextField(emailController, 'Email', 'Enter your email'),
+            const SizedBox(height: 10),
+            buildTextField(
+                passwordController, 'Password', 'Enter your password',
+                isPassword: true),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _onSignUpButtonPressed(
+                  context, ref.read(authProvider.notifier)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple, // Background color
+                foregroundColor: Colors.white, // Text color
               ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  // Navigator.of(context).pushReplacement(
-                  //     MaterialPageRoute(builder: (_) => SignInScreen()));
-                  context.go('/signup');
-                },
-                child: const Text(
-                  "Already have an account? Sign In",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              child: const Text('Sign Up'),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                context.go('/signin');
+              },
+              child: const Text(
+                "Already have an account? Sign In",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -110,7 +99,7 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 
-  void _onSignUpButtonPressed(BuildContext context, AuthBloc authBloc) {
+  void _onSignUpButtonPressed(BuildContext context, AuthNotifier authNotifier) {
     final firstNameValid =
         ValidationUtils.validateName(firstNameController.text);
     final lastNameValid = ValidationUtils.validateName(lastNameController.text);
@@ -127,11 +116,11 @@ class SignUpScreen extends StatelessWidget {
       return;
     }
 
-    authBloc.add(SignUpRequested(
+    authNotifier.signUp(
       firstName: firstNameController.text,
       lastName: lastNameController.text,
       email: emailController.text,
       password: passwordController.text,
-    ));
+    );
   }
 }

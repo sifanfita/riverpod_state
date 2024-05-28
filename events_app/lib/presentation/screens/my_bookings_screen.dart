@@ -1,83 +1,71 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/booking_bloc/book_bloc.dart';
-import '../../bloc/booking_bloc/book_event.dart';
-import '../../bloc/booking_bloc/book_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/book_model.dart';
-import '../../utils/auth_utils.dart';
-import '../../api/book_api.dart';
+import '../../providers/booking_provider.dart';
 
-class MyBookingsScreen extends StatelessWidget {
+class MyBookingsScreen extends ConsumerStatefulWidget {
+  @override
+  _MyBookingsScreenState createState() => _MyBookingsScreenState();
+}
+
+class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(bookingProvider.notifier).loadBookings();
+  }
+
   @override
   Widget build(BuildContext context) {
-    context.read<BookingBloc>().add(LoadBookings());
+    final bookingState = ref.watch(bookingProvider);
+
+    ref.listen<BookingState>(bookingProvider, (previous, next) {
+      if (next is BookingError) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(next.message)));
+      }
+      if (next is BookingCancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Booking successfully cancelled!")),
+        );
+        ref
+            .read(bookingProvider.notifier)
+            .loadBookings(); // Refresh the list after cancellation
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
         title: Text('My Bookings'),
         backgroundColor: Colors.deepPurple,
       ),
-      body: BlocConsumer<BookingBloc, BookingState>(
-        listener: (context, state) {
-          if (state is BookingError) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(state.message)));
-          }
-          if (state is BookingCancelled) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Booking successfully cancelled!")));
-            context
-                .read<BookingBloc>()
-                .add(LoadBookings()); // Refresh the list after cancellation
-          }
-        },
-        builder: (context, state) {
-          if (state is BookingLoading) {
-            return Center(child: CircularProgressIndicator());
-          } else if (state is BookingsLoaded) {
-            return ListView.builder(
-              itemCount: state.bookings.length,
-              itemBuilder: (context, index) {
-                Booking booking = state.bookings[index];
-                return Card(
-                  margin: EdgeInsets.all(8),
-                  child: ListTile(
-                    leading: Icon(Icons.event, color: Colors.deepPurple),
-                    title: Text(booking.event.eventName),
-                    subtitle:
-                        Text('Date: ${booking.bookingDate.toIso8601String()}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.cancel, color: Colors.red),
-                      onPressed: () => _cancelBooking(context, booking.id),
-                    ),
-                  ),
-                );
-              },
-            );
-          } else {
-            return Center(child: Text('No bookings found'));
-          }
-        },
-      ),
+      body: bookingState is BookingLoading
+          ? Center(child: CircularProgressIndicator())
+          : bookingState is BookingsLoaded
+              ? ListView.builder(
+                  itemCount: bookingState.bookings.length,
+                  itemBuilder: (context, index) {
+                    Booking booking = bookingState.bookings[index];
+                    return Card(
+                      margin: EdgeInsets.all(8),
+                      child: ListTile(
+                        leading: Icon(Icons.event, color: Colors.deepPurple),
+                        title: Text(booking.event.eventName),
+                        subtitle: Text(
+                            'Date: ${booking.bookingDate.toIso8601String()}'),
+                        trailing: IconButton(
+                          icon: Icon(Icons.cancel, color: Colors.red),
+                          onPressed: () => _cancelBooking(context, booking.id),
+                        ),
+                      ),
+                    );
+                  },
+                )
+              : Center(child: Text('No bookings found')),
     );
   }
 
   void _cancelBooking(BuildContext context, int bookingId) async {
-    String? token = await AuthUtils.getToken();
-    if (token != null) {
-      var result = await BookApi.deleteBooking(bookingId, token);
-      if (result['success']) {
-        // Dispatch a CancelBooking event to the Bloc
-        BlocProvider.of<BookingBloc>(context).add(CancelBooking(bookingId));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Failed to cancel booking: ${result['error']}"),
-        ));
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Authentication error. Please log in again."),
-      ));
-    }
+    ref.read(bookingProvider.notifier).cancelBooking(bookingId);
   }
 }

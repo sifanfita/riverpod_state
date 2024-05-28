@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/auth_bloc/auth_bloc.dart';
-import '../../bloc/auth_bloc/auth_event.dart';
-import '../../bloc/auth_bloc/auth_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../utils/validation_utils.dart';
 import '../../utils/notification_utils.dart';
-import 'admin_homepage_screen.dart';
-import 'events_screen.dart';
-import 'sign_up_screen.dart';
-
 import 'package:go_router/go_router.dart';
 
-class SignInScreen extends StatelessWidget {
+class SignInScreen extends ConsumerWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -24,9 +18,18 @@ class SignInScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Use an existing instance of AuthBloc
-    final authBloc = BlocProvider.of<AuthBloc>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next is AuthSuccess) {
+        NotificationUtils.showSnackBar(context, 'Sign in successful.',
+            isError: false);
+        navigateBasedOnRole(context, next.role);
+      } else if (next is AuthFailure) {
+        NotificationUtils.showSnackBar(context, next.error, isError: true);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -34,61 +37,44 @@ class SignInScreen extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
       ),
       backgroundColor: Colors.black,
-      body: BlocListener<AuthBloc, AuthState>(
-        bloc: authBloc, // Use the provided AuthBloc
-        listener: (context, state) {
-          if (state is AuthSuccess) {
-            NotificationUtils.showSnackBar(context, 'Sign in successful.',
-                isError: false);
-            // Navigator.of(context).pushReplacement(MaterialPageRoute(
-            //     builder: (context) =>
-            //         state.role == 'admin' ? AdminHomePage() : EventsScreen()));
-            navigateBasedOnRole(context, state.role);
-          } else if (state is AuthFailure) {
-            NotificationUtils.showSnackBar(context, state.error, isError: true);
-          }
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.asset('assets/images/logo.png', width: 100, height: 100),
-              const SizedBox(height: 20),
-              buildTextField(emailController, 'Email', 'Enter your email'),
-              const SizedBox(height: 10),
-              buildTextField(
-                  passwordController, 'Password', 'Enter your password',
-                  isPassword: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _onSignInButtonPressed(context, authBloc),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple, // Background color
-                  foregroundColor: Colors.white, // Text color
-                ),
-                child: const Text('Sign In'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Image.asset('assets/images/logo.png', width: 100, height: 100),
+            const SizedBox(height: 20),
+            buildTextField(emailController, 'Email', 'Enter your email'),
+            const SizedBox(height: 10),
+            buildTextField(
+                passwordController, 'Password', 'Enter your password',
+                isPassword: true),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _onSignInButtonPressed(
+                  context, ref.read(authProvider.notifier)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple, // Background color
+                foregroundColor: Colors.white, // Text color
               ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(builder: (context) => SignUpScreen()),
-                  // );
-                  context.go('/signup');
-                },
-                child: const Text(
-                  "Don't have an account? Sign up",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              child: const Text('Sign In'),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: () {
+                context.go('/signup');
+              },
+              child: const Text(
+                "Don't have an account? Sign up",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -111,7 +97,7 @@ class SignInScreen extends StatelessWidget {
     );
   }
 
-  void _onSignInButtonPressed(BuildContext context, AuthBloc authBloc) {
+  void _onSignInButtonPressed(BuildContext context, AuthNotifier authNotifier) {
     // Validate email
     final emailValidation = ValidationUtils.validateEmail(emailController.text);
     if (!emailValidation.isValid) {
@@ -127,10 +113,10 @@ class SignInScreen extends StatelessWidget {
           isError: true);
       return;
     }
-    // Dispatch sign-in event
-    authBloc.add(SignInRequested(
+    // Perform sign-in
+    authNotifier.signIn(
       email: emailController.text,
       password: passwordController.text,
-    ));
+    );
   }
 }

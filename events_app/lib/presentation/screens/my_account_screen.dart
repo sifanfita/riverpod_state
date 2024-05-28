@@ -1,115 +1,124 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../bloc/user_bloc/user_bloc.dart';
-import '../../bloc/user_bloc/user_state.dart';
-import '../../bloc/user_bloc/user_event.dart';
-import 'package:events_app/presentation/screens/sign_in_screen.dart';
-import 'package:events_app/utils/auth_utils.dart';
-
-import '../../models/validation_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/user_provider.dart';
+import '../../utils/auth_utils.dart';
 import '../../utils/validation_utils.dart';
+import '../../models/validation_model.dart';
 
 import 'package:go_router/go_router.dart';
 
-class MyAccountScreen extends StatefulWidget {
+class MyAccountScreen extends ConsumerStatefulWidget {
   @override
   _MyAccountScreenState createState() => _MyAccountScreenState();
 }
 
-class _MyAccountScreenState extends State<MyAccountScreen> {
+class _MyAccountScreenState extends ConsumerState<MyAccountScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    context.read<UserBloc>().add(LoadUser());
+  void initState() {
+    super.initState();
+    ref.read(userProvider.notifier).loadUser();
+  }
 
-    return BlocConsumer<UserBloc, UserState>(
-      listener: (context, state) {
-        if (state is UserLoaded) {
-          _emailController.text = state.user.email;
-          _firstNameController.text = state.user.firstName;
-          _lastNameController.text = state.user.lastName;
-        }
-        if (state is UserError) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(state.message)));
-        }
-        if (state is UserUpdateSuccess) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text("User Details Updated")));
-        }
-        if (state is UserDeleteSuccess) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text("User Account Deleted")));
-          _logout(context);
-        }
-      },
-      builder: (context, state) {
-        if (state is UserLoading) {
-          return Center(child: CircularProgressIndicator());
-        } else if (state is UserLoaded) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: AssetImage(
-                      'assets/images/image.png'), // Placeholder for user image
-                ),
-                SizedBox(height: 20),
-                _buildTextField(_emailController, "Email", context),
-                SizedBox(height: 10),
-                _buildTextField(_firstNameController, "First Name", context),
-                SizedBox(height: 10),
-                _buildTextField(_lastNameController, "Last Name", context),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_validateInput()) {
-                      context.read<UserBloc>().add(UpdateUserDetails({
-                            'email': _emailController.text,
-                            'firstName': _firstNameController.text,
-                            'lastName': _lastNameController.text,
-                          }));
-                    }
-                  },
-                  child: Text(
-                    "Update Details",
-                    style: TextStyle(color: Colors.black),
+  @override
+  Widget build(BuildContext context) {
+    final userState = ref.watch(userProvider);
+
+    ref.listen<UserState>(userProvider, (previous, next) {
+      if (next is UserLoaded) {
+        _emailController.text = next.user.email;
+        _firstNameController.text = next.user.firstName;
+        _lastNameController.text = next.user.lastName;
+      }
+      if (next is UserUpdateSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("User Details Updated")),
+        );
+      }
+      if (next is UserDeleteSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("User Account Deleted")),
+        );
+        _logout(context);
+      }
+      if (next is UserError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.message)),
+        );
+      }
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("My Account"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: userState is UserLoading
+          ? Center(child: CircularProgressIndicator())
+          : userState is UserLoaded
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: AssetImage(
+                            'assets/images/image.png'), // Placeholder for user image
+                      ),
+                      SizedBox(height: 20),
+                      _buildTextField(_emailController, "Email", context),
+                      SizedBox(height: 10),
+                      _buildTextField(
+                          _firstNameController, "First Name", context),
+                      SizedBox(height: 10),
+                      _buildTextField(
+                          _lastNameController, "Last Name", context),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_validateInput()) {
+                            ref.read(userProvider.notifier).updateUserDetails({
+                              'email': _emailController.text,
+                              'firstName': _firstNameController.text,
+                              'lastName': _lastNameController.text,
+                            });
+                          }
+                        },
+                        child: Text(
+                          "Update Details",
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(userProvider.notifier).deleteSelf();
+                        },
+                        child: Text("Delete Account"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => _logout(context),
+                        child: Text("Logout"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[850],
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<UserBloc>().add(DeleteSelf());
-                  },
-                  child: Text("Delete Account"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () => _logout(context),
-                  child: Text("Logout"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[850],
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          );
-        } else {
-          return Center(
-              child: Text("Unable to Load User Data. Please try again."));
-        }
-      },
+                )
+              : Center(
+                  child: Text("Unable to Load User Data. Please try again.")),
     );
   }
 
@@ -128,12 +137,6 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       ),
     );
   }
-
-  // void _logout(BuildContext context) async {
-  //   await AuthUtils.setToken(null); // Clear token
-  //   Navigator.of(context).pushReplacement(
-  //       MaterialPageRoute(builder: (context) => SignInScreen()));
-  // }
 
   void _logout(BuildContext context) async {
     await AuthUtils.setToken(null); // Clear token
