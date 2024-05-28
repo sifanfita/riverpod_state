@@ -9,14 +9,22 @@ class MyBookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
+  bool _isFirstBuild = true;
+
   @override
   void initState() {
     super.initState();
-    ref.read(bookingProvider.notifier).loadBookings();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(bookingProvider.notifier).loadBookings();
+      });
+      _isFirstBuild = false;
+    }
+
     final bookingState = ref.watch(bookingProvider);
 
     ref.listen<BookingState>(bookingProvider, (previous, next) {

@@ -15,13 +15,6 @@ class EventsScreen extends ConsumerStatefulWidget {
 class _EventsScreenState extends ConsumerState<EventsScreen> {
   int _selectedIndex = 0; // Default index for the first tab
 
-  @override
-  void initState() {
-    super.initState();
-    // Load events when the screen is first loaded
-    ref.read(eventProvider.notifier).loadEvents();
-  }
-
   // Dynamic switching of screens
   Widget _currentScreen() {
     switch (_selectedIndex) {
@@ -36,7 +29,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       return EventCard(event: eventState.events[index]);
                     },
                   )
-                : const Center(child: Text('Failed to load events'));
+                : eventState is EventError
+                    ? Center(
+                        child: Text(
+                            'Failed to load events: ${eventState.message}'))
+                    : const Center(child: Text('No events available'));
       case 1: // My Account
         return MyAccountScreen();
       case 2: // My Bookings
@@ -49,6 +46,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      if (index == 0) {
+        // Load events when the events tab is selected
+        ref.read(eventProvider.notifier).loadEvents();
+      }
     });
   }
 

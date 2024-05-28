@@ -8,14 +8,22 @@ class UserManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
+  bool _isFirstBuild = true;
+
   @override
   void initState() {
     super.initState();
-    ref.read(userProvider.notifier).loadAllUsers();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(userProvider.notifier).loadAllUsers();
+      });
+      _isFirstBuild = false;
+    }
+
     final userState = ref.watch(userProvider);
 
     return Scaffold(

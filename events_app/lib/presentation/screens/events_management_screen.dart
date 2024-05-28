@@ -12,14 +12,22 @@ class EventsManagementScreen extends ConsumerStatefulWidget {
 
 class _EventsManagementScreenState
     extends ConsumerState<EventsManagementScreen> {
+  bool _isFirstBuild = true;
+
   @override
   void initState() {
     super.initState();
-    ref.read(eventProvider.notifier).loadEvents();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(eventProvider.notifier).loadEvents();
+      });
+      _isFirstBuild = false;
+    }
+
     final eventState = ref.watch(eventProvider);
 
     return Scaffold(

@@ -19,15 +19,22 @@ class _PersonalAccountScreenState extends ConsumerState<PersonalAccountScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  bool _isFirstBuild = true;
 
   @override
   void initState() {
     super.initState();
-    ref.read(userProvider.notifier).loadUser();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(userProvider.notifier).loadUser();
+      });
+      _isFirstBuild = false;
+    }
+
     final userState = ref.watch(userProvider);
 
     ref.listen<UserState>(userProvider, (previous, next) {

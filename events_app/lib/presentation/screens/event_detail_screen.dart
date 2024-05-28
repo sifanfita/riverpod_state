@@ -7,8 +7,9 @@ import 'package:events_app/api/event_api.dart';
 import 'package:events_app/api/user_api.dart';
 import 'package:events_app/utils/notification_utils.dart';
 import 'package:events_app/presentation/screens/sign_in_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EventDetailScreen extends StatefulWidget {
+class EventDetailScreen extends ConsumerStatefulWidget {
   final Event event;
 
   const EventDetailScreen({super.key, required this.event});
@@ -17,38 +18,25 @@ class EventDetailScreen extends StatefulWidget {
   _EventDetailScreenState createState() => _EventDetailScreenState();
 }
 
-class _EventDetailScreenState extends State<EventDetailScreen> {
+class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool? isBooked;
   int? bookingId;
+  bool _isFirstBuild = true;
 
   @override
   void initState() {
     super.initState();
-    _checkIfBooked();
-  }
-
-  Future<void> _checkIfBooked() async {
-    String? accessToken = await AuthUtils.getToken();
-    if (accessToken != null) {
-      var bookingsResult = await UserApi.getSelfBookings(accessToken);
-      if (bookingsResult['success']) {
-        var bookings = List<Booking>.from(
-            bookingsResult['data'].map((model) => Booking.fromJson(model)));
-
-        setState(() {
-          isBooked =
-              bookings.any((booking) => booking.event.id == widget.event.id);
-          if (isBooked!) {
-            bookingId = (bookings.firstWhere(
-                (booking) => booking.event.id == widget.event.id)).id;
-          }
-        });
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isFirstBuild) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkIfBooked();
+      });
+      _isFirstBuild = false;
+    }
+
     String imagePath = 'assets/event_images/${widget.event.id % 2}.jpg';
 
     return Scaffold(
@@ -102,6 +90,26 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _checkIfBooked() async {
+    String? accessToken = await AuthUtils.getToken();
+    if (accessToken != null) {
+      var bookingsResult = await UserApi.getSelfBookings(accessToken);
+      if (bookingsResult['success']) {
+        var bookings = List<Booking>.from(
+            bookingsResult['data'].map((model) => Booking.fromJson(model)));
+
+        setState(() {
+          isBooked =
+              bookings.any((booking) => booking.event.id == widget.event.id);
+          if (isBooked!) {
+            bookingId = (bookings.firstWhere(
+                (booking) => booking.event.id == widget.event.id)).id;
+          }
+        });
+      }
+    }
   }
 
   void _handleEventBooking(BuildContext context) async {
